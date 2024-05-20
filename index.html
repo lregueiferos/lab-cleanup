@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Cleaning List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+
+        #game {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .lab-item {
+            margin: 10px;
+            padding: 20px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lab-item.cleaned {
+            background-color: #8bc34a;
+            text-decoration: line-through;
+        }
+
+        .lab-item img {
+            max-width: 50px;
+            max-height: 50px;
+            margin-right: 10px;
+        }
+
+        .remove-button {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+
+        .remove-button:hover {
+            background-color: #ff4949;
+        }
+
+        .progress-container {
+            margin-top: 20px;
+            height: 20px;
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: #8bc34a;
+            transition: width 0.3s;
+        }
+
+        .add-item-container {
+            margin: 20px 0;
+        }
+
+        .add-item-container input {
+            padding: 10px;
+            width: 70%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .add-item-container button {
+            padding: 10px;
+            border: none;
+            background-color: #8bc34a;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .add-item-container button:hover {
+            background-color: #7cb342;
+        }
+
+        .remove-all-container {
+            margin-top: 20px;
+        }
+
+        .remove-all-container button {
+            padding: 10px;
+            border: none;
+            background-color: #ff6b6b;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .remove-all-container button:hover {
+            background-color: #ff4949;
+        }
+
+        .save-list-container {
+            margin-top: 20px;
+        }
+
+        .save-list-container input {
+            padding: 10px;
+            width: 70%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .save-list-container button {
+            padding: 10px;
+            border: none;
+            background-color: #4caf50;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .save-list-container button:hover {
+            background-color: #45a049;
+        }
+
+        .saved-lists-container {
+            margin-top: 20px;
+        }
+
+        .saved-lists-container select {
+            padding: 10px;
+            width: 70%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .saved-lists-container button {
+            padding: 10px;
+            border: none;
+            background-color: #ff6b6b;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .saved-lists-container button:hover {
+            background-color: #ff4949;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <h1>Lab Cleaning List</h1>
+        <p>Click on the items to clean the lab!</p>
+
+        <div class="add-item-container">
+            <input type="text" id="newItemInput" placeholder="Add new item">
+            <input type="text" id="imageInput" placeholder="Image URL (optional)">
+            <button id="addItemButton">Add Item</button>
+        </div>
+
+        <div class="remove-all-container">
+            <button id="removeAllButton">Remove All Items</button>
+        </div>
+
+        <div class="save-list-container">
+            <input type="text" id="listNameInput" placeholder="Enter list name">
+            <button id="saveListButton">Save List</button>
+            <button id="clearListButton">Clear Saved List</button>
+        </div>
+
+        <div class="saved-lists-container">
+            <select id="savedListsSelect"></select>
+            <button id="loadListButton">Load Selected List</button>
+            <button id="deleteListButton">Delete Selected List</button>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const labItemsContainer = document.getElementById('game');
+            const progressBar = document.getElementById('progress-bar');
+            const newItemInput = document.getElementById('newItemInput');
+            const imageInput = document.getElementById('imageInput');
+            const addItemButton = document.getElementById('addItemButton');
+            const removeAllButton = document.getElementById('removeAllButton');
+            const saveListButton = document.getElementById('saveListButton');
+            const loadListButton = document.getElementById('loadListButton');
+            const clearListButton = document.getElementById('clearListButton');
+            const deleteListButton = document.getElementById('deleteListButton');
+            const listNameInput = document.getElementById('listNameInput');
+            const savedListsSelect = document.getElementById('savedListsSelect');
+
+            labItemsContainer.addEventListener('click', (event) => {
+                if (event.target.classList.contains('lab-item')) {
+                    event.target.classList.toggle('cleaned');
+                    updateProgressBar();
+                    checkWinCondition();
+                } else if (event.target.classList.contains('remove-button')) {
+                    const itemToRemove = event.target.parentElement;
+                    itemToRemove.remove();
+                    updateProgressBar();
+                }
+            });
+
+            addItemButton.addEventListener('click', () => {
+                const newItemText = newItemInput.value.trim();
+                const imageUrl = imageInput.value.trim();
+                if (newItemText !== '') {
+                    addItem(newItemText, imageUrl);
+                    newItemInput.value = '';
+                    imageInput.value = '';
+                }
+            });
+
+            removeAllButton.addEventListener('click', () => {
+                const labItems = document.querySelectorAll('.lab-item');
+                labItems.forEach(item => item.remove());
+                updateProgressBar();
+            });
+
+            saveListButton.addEventListener('click', () => {
+                saveList();
+            });
+
+            loadListButton.addEventListener('click', () => {
+                loadList();
+            });
+
+            clearListButton.addEventListener('click', () => {
+                clearLists();
+            });
+
+            deleteListButton.addEventListener('click', () => {
+                deleteSelectedList();
+            });
+
+            function addItem(text, imageUrl = '', isCleaned = false) {
+                const newItem = document.createElement('div');
+                newItem.classList.add('lab-item');
+                if (isCleaned) newItem.classList.add('cleaned');
+                newItem.innerHTML = `${imageUrl ? `<img src="${imageUrl}" alt="${text}">` : ''}${text} <button class="remove-button">Remove</button>`;
+                labItemsContainer.insertBefore(newItem, labItemsContainer.querySelector('.add-item-container'));
+                updateProgressBar();
+            }
+
+            function updateProgressBar() {
+                const labItems = document.querySelectorAll('.lab-item');
+                const cleanedItems = document.querySelectorAll('.lab-item.cleaned').length;
+                const totalItems = labItems.length;
+                const progressPercentage = totalItems === 0 ? 0 : (cleanedItems / totalItems) * 100;
+                progressBar.style.width = progressPercentage + '%';
+            }
+
+            function checkWinCondition() {
+                const labItems = document.querySelectorAll('.lab-item');
+                const allCleaned = Array.from(labItems).every(item => item.classList.contains('cleaned'));
+                if (allCleaned && labItems.length >
+                0) {
+                    alert('Congratulations! The lab is clean!');
+                }
+            }
+
+            function saveList() {
+                const listName = listNameInput.value.trim();
+                if (listName === '') {
+                    alert('Please enter a list name.');
+                    return;
+                }
+
+                const labItems = document.querySelectorAll('.lab-item');
+                const itemsToSave = [];
+                labItems.forEach(item => {
+                    const imageUrl = item.querySelector('img') ? item.querySelector('img').src : '';
+                    itemsToSave.push({
+                        text: item.textContent.replace(' Remove', ''),
+                        imageUrl: imageUrl,
+                        isCleaned: item.classList.contains('cleaned')
+                    });
+                });
+
+                let savedLists = JSON.parse(localStorage.getItem('savedLists')) || {};
+                savedLists[listName] = itemsToSave;
+                localStorage.setItem('savedLists', JSON.stringify(savedLists));
+
+                populateSavedListsDropdown();
+                alert('List saved!');
+            }
+
+            function loadList() {
+                const selectedListName = savedListsSelect.value;
+                if (selectedListName === '') {
+                    alert('Please select a list to load.');
+                    return;
+                }
+
+                const savedLists = JSON.parse(localStorage.getItem('savedLists'));
+                const selectedList = savedLists[selectedListName];
+                if (selectedList) {
+                    clearLabItems();
+                    selectedList.forEach(item => addItem(item.text, item.imageUrl, item.isCleaned));
+                    updateProgressBar();
+                }
+            }
+
+            function clearLists() {
+                localStorage.removeItem('savedLists');
+                populateSavedListsDropdown();
+                alert('All saved lists cleared!');
+            }
+
+            function deleteSelectedList() {
+                const selectedListName = savedListsSelect.value;
+                if (selectedListName === '') {
+                    alert('Please select a list to delete.');
+                    return;
+                }
+
+                let savedLists = JSON.parse(localStorage.getItem('savedLists')) || {};
+                delete savedLists[selectedListName];
+                localStorage.setItem('savedLists', JSON.stringify(savedLists));
+                populateSavedListsDropdown();
+                alert('Selected list deleted!');
+            }
+
+            function populateSavedListsDropdown() {
+                savedListsSelect.innerHTML = '';
+                const savedLists = JSON.parse(localStorage.getItem('savedLists')) || {};
+                for (const listName in savedLists) {
+                    const option = document.createElement('option');
+                    option.value = listName;
+                    option.textContent = listName;
+                    savedListsSelect.appendChild(option);
+                }
+            }
+
+            function clearLabItems() {
+                const labItems = document.querySelectorAll('.lab-item');
+                labItems.forEach(item => item.remove());
+            }
+
+            // Populate saved lists dropdown on page load
+            populateSavedListsDropdown();
+        });
+    </script>
+</body>
+</html>
+
+
